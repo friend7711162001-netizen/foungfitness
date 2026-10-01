@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>團體課程表自動生成系統 | Foung Fitness</title>
+    <!-- Google Fonts: Noto Sans TC & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main Style -->
+    <link rel="stylesheet" href="style.css">
+    <!-- SheetJS (xlsx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- html2canvas for Image Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Control Panel -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo-icon"><i class="fa-solid fa-calendar-days"></i></div>
+                <div>
+                    <h2>課表生成器</h2>
+                    <p class="subtitle">Foung Fitness 團課報表統計</p>
+                </div>
+            </div>
+
+            <!-- Upload Area -->
+            <div class="section upload-section">
+                <h3><i class="fa-solid fa-file-excel"></i> 1. 上傳 XLSX 報表</h3>
+                <div class="drop-zone" id="dropZone">
+                    <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" hidden>
+                    <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                    <p class="drop-text">拖曳 XLSX 檔案至此<br>或 <span>點擊瀏覽檔案</span></p>
+                    <small class="file-tip">支援健身房系統產出的團課報表</small>
+                </div>
+                <button class="btn btn-secondary btn-block" id="btnLoadDemo">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> 載入測試範例資料
+                </button>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="section settings-section">
+                <h3><i class="fa-solid fa-sliders"></i> 2. 課表設定與標題</h3>
+                
+                <div class="form-group">
+                    <label for="scheduleTitle">主標題</label>
+                    <input type="text" id="scheduleTitle" class="form-control" value="2026 團體課程表（10月份 October）">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col">
+                        <label for="yearSelect">年份</label>
+                        <input type="number" id="yearSelect" class="form-control" value="2026" min="2020" max="2035">
+                    </div>
+                    <div class="form-group col">
+                        <label for="monthSelect">月份</label>
+                        <select id="monthSelect" class="form-control">
+                            <option value="1">1月 Jan</option>
+                            <option value="2">2月 Feb</option>
+                            <option value="3">3月 Mar</option>
+                            <option value="4">4月 Apr</option>
+                            <option value="5">5月 May</option>
+                            <option value="6">6月 Jun</option>
+                            <option value="7">7月 Jul</option>
+                            <option value="8">8月 Aug</option>
+                            <option value="9">9月 Sep</option>
+                            <option value="10" selected>10月 Oct</option>
+                            <option value="11">11月 Nov</option>
+                            <option value="12">12月 Dec</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group toggle-group">
+                    <label class="switch-label">
+                        <input type="checkbox" id="autoTagOff" checked>
+                        <span class="slider"></span>
+                        <span class="label-text">自動判定標記「停課／缺課日期」</span>
+                    </label>
+                </div>
+
+                <div class="form-group toggle-group">
+                    <label class="switch-label">
+                        <input type="checkbox" id="simplifyTeacher" checked>
+                        <span class="slider"></span>
+                        <span class="label-text">精簡老師名稱 (如: 黃春梅 May -> 春梅)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Customization Section -->
+            <div class="section customization-section">
+                <h3><i class="fa-solid fa-paint-roller"></i> 3. 樣式與欄位調整</h3>
+                <div class="form-row">
+                    <div class="form-group col">
+                        <label for="maxColumns">最多顯示課程數</label>
+                        <select id="maxColumns" class="form-control">
+                            <option value="3" selected>3 欄 (課程 1~3)</option>
+                            <option value="4">4 欄 (課程 1~4)</option>
+                            <option value="5">5 欄 (課程 1~5)</option>
+                        </select>
+                    </div>
+                    <div class="form-group col">
+                        <label for="fontSizeScale">字體大小</label>
+                        <select id="fontSizeScale" class="form-control">
+                            <option value="small">標準精簡</option>
+                            <option value="medium" selected>適中 (推薦)</option>
+                            <option value="large">清晰放大</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button class="btn btn-outline btn-block" id="btnAddSlot">
+                        <i class="fa-solid fa-plus"></i> 手動新增單堂課程
+                    </button>
+                </div>
+            </div>
+
+            <!-- Export Buttons -->
+            <div class="section export-section">
+                <h3><i class="fa-solid fa-download"></i> 4. 匯出與列印</h3>
+                <button class="btn btn-primary btn-block" id="btnExportImage">
+                    <i class="fa-solid fa-file-image"></i> 匯出高清圖片 (PNG)
+                </button>
+                <button class="btn btn-light btn-block" id="btnPrintPdf">
+                    <i class="fa-solid fa-print"></i> 列印 / 另存 PDF
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Preview Canvas -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="status-info">
+                    <span id="dataStatusBadge" class="badge badge-success">
+                        <i class="fa-solid fa-circle-check"></i> 已準備完成
+                    </span>
+                    <span id="rowCountInfo" class="info-text">顯示 2026/10 團體課程表</span>
+                </div>
+                <div class="actions">
+                    <span class="tip-badge"><i class="fa-solid fa-lightbulb"></i> 提示：表單內容可直接點擊進行實時編輯</span>
+                </div>
+            </header>
+
+            <div class="preview-wrapper">
+                <div class="schedule-card-container" id="printableArea">
+                    <!-- Title Header -->
+                    <div class="schedule-header">
+                        <h1 class="schedule-title" id="displayTitle" contenteditable="true">2026 團體課程表（10月份 October）</h1>
+                    </div>
+
+                    <!-- Timetable Grid -->
+                    <div class="schedule-table-wrapper">
+                        <table class="schedule-table" id="scheduleTable">
+                            <thead>
+                                <tr>
+                                    <th class="col-day">星期</th>
+                                    <th class="col-course">課程 1</th>
+                                    <th class="col-course">課程 2</th>
+                                    <th class="col-course">課程 3</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduleTbody">
+                                <!-- Dynamic Rows render here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit Modal for Course Details -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>編輯課程資訊</h4>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editDayIndex">
+                    <input type="hidden" id="editSlotIndex">
+                    <div class="form-group">
+                        <label>星期</label>
+                        <select id="modalDayOfWeek" class="form-control">
+                            <option value="1">星期一</option>
+                            <option value="2">星期二</option>
+                            <option value="3">星期三</option>
+                            <option value="4">星期四</option>
+                            <option value="5">星期五</option>
+                            <option value="6">星期六</option>
+                            <option value="0">星期日</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>上課時間</label>
+                        <input type="text" id="modalTime" class="form-control" placeholder="13:00">
+                    </div>
+                    <div class="form-group">
+                        <label>備註標籤 (如：10/26 停、隔週)</label>
+                        <input type="text" id="modalTag" class="form-control" placeholder="10/26 停">
+                    </div>
+                    <div class="form-group">
+                        <label>課程名稱</label>
+                        <input type="text" id="modalName" class="form-control" placeholder="掛布肌力">
+                    </div>
+                    <div class="form-group">
+                        <label>授課老師</label>
+                        <input type="text" id="modalTeacher" class="form-control" placeholder="Joyce">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="btnDeleteCourse"><i class="fa-solid fa-trash"></i> 刪除此堂課</button>
+                <button class="btn btn-primary" id="btnSaveCourse">儲存變更</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="sample-data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
