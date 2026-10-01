@@ -401,9 +401,12 @@ body {
     box-shadow: 0 0 0 2px var(--accent-color);
 }
 
-/* Schedule Table */
+/* Schedule Table & Border System */
 .schedule-table-wrapper {
     width: 100%;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
 }
 
 .schedule-table {
@@ -412,13 +415,67 @@ body {
     table-layout: fixed;
 }
 
+/* Default Grid Border (全網格框線) */
+.schedule-card-container.border-grid .schedule-table-wrapper {
+    border: 1.5px solid #cbd5e1;
+}
+
+.schedule-card-container.border-grid .schedule-table th,
+.schedule-card-container.border-grid .schedule-table td {
+    border: 1px solid #cbd5e1;
+}
+
+.schedule-card-container.border-grid .schedule-table th {
+    background-color: #f1f5f9;
+}
+
+.schedule-card-container.border-grid .day-cell {
+    background-color: #f8fafc;
+}
+
+/* Horizontal Only Border (僅橫向分隔線) */
+.schedule-card-container.border-horizontal .schedule-table-wrapper {
+    border-top: 2px solid #cbd5e1;
+    border-bottom: 2px solid #cbd5e1;
+}
+
+.schedule-card-container.border-horizontal .schedule-table th,
+.schedule-card-container.border-horizontal .schedule-table td {
+    border: none;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.schedule-card-container.border-horizontal .schedule-table th {
+    background-color: #f8fafc;
+}
+
+/* Outer Only Border (僅外框線) */
+.schedule-card-container.border-outer .schedule-table-wrapper {
+    border: 2px solid #cbd5e1;
+}
+
+.schedule-card-container.border-outer .schedule-table th,
+.schedule-card-container.border-outer .schedule-table td {
+    border: none;
+}
+
+.schedule-card-container.border-outer .schedule-table th {
+    border-bottom: 1.5px solid #cbd5e1;
+    background-color: #f8fafc;
+}
+
+/* None Border (無框線) */
+.schedule-card-container.border-none .schedule-table th,
+.schedule-card-container.border-none .schedule-table td {
+    border: none;
+}
+
 .schedule-table th {
     text-align: left;
     font-size: 1em;
     font-weight: 700;
     color: #111827;
-    padding: 12px 14px 20px 14px;
-    border: none;
+    padding: 12px 14px;
 }
 
 .schedule-table th.col-day {
@@ -431,17 +488,16 @@ body {
 
 .schedule-table td {
     vertical-align: top;
-    padding: 16px 14px 32px 14px;
-    border: none;
+    padding: 14px 14px;
     position: relative;
 }
 
 /* Day Column Cell */
 .day-cell {
-    font-size: 1.15em;
+    font-size: 1.1em;
     font-weight: 700;
     color: #111827;
-    padding-top: 16px;
+    vertical-align: middle;
 }
 
 /* Course Slot Cell Styling */

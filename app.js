@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         simplifyTeacher: true,
         maxColumns: 3,
         fontSizeScale: 'medium',
+        borderStyle: 'grid',
         // Days map: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 0=Sun
         days: JSON.parse(JSON.stringify(window.DEFAULT_SCHEDULE.days))
     };
@@ -33,10 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const simplifyTeacherCheckbox = document.getElementById('simplifyTeacher');
     const maxColumnsSelect = document.getElementById('maxColumns');
     const fontSizeScaleSelect = document.getElementById('fontSizeScale');
+    const borderStyleSelect = document.getElementById('borderStyleSelect');
     const btnAddSlot = document.getElementById('btnAddSlot');
     const btnExportImage = document.getElementById('btnExportImage');
     const btnPrintPdf = document.getElementById('btnPrintPdf');
-    
+
     const displayTitle = document.getElementById('displayTitle');
     const scheduleTable = document.getElementById('scheduleTable');
     const scheduleTbody = document.getElementById('scheduleTbody');
@@ -135,6 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
             applyFontSizeScale();
         });
 
+        if (borderStyleSelect) {
+            borderStyleSelect.addEventListener('change', (e) => {
+                state.borderStyle = e.target.value;
+                applyBorderStyle();
+            });
+        }
+
         // Add Slot Button
         btnAddSlot.addEventListener('click', () => {
             openModal(1, -1, { time: "19:00", tag: "", name: "新課程", teacher: "老師" });
@@ -168,11 +177,17 @@ document.addEventListener('DOMContentLoaded', () => {
         scheduleTitleInput.value = state.title;
         displayTitle.innerText = state.title;
         rowCountInfo.innerText = `顯示 ${state.year}/${state.month} 團體課程表`;
+        if (borderStyleSelect) borderStyleSelect.value = state.borderStyle;
     }
 
     function applyFontSizeScale() {
         printableArea.classList.remove('scale-small', 'scale-medium', 'scale-large');
         printableArea.classList.add(`scale-${state.fontSizeScale}`);
+    }
+
+    function applyBorderStyle() {
+        printableArea.classList.remove('border-grid', 'border-horizontal', 'border-outer', 'border-none');
+        printableArea.classList.add(`border-${state.borderStyle}`);
     }
 
     // --- File Upload & Parse Engine ---
@@ -397,6 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Render Table Logic ---
     function renderSchedule() {
         applyFontSizeScale();
+        applyBorderStyle();
 
         // Render Table Headers
         const maxCols = state.maxColumns;
